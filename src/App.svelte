@@ -1,45 +1,71 @@
 <script>
-  import svelteLogo from './assets/svelte.svg'
-  import Counter from './lib/Counter.svelte'
+  // @ts-nocheck
+
+  import Fuse from "fuse.js";
+  import { init } from "svelte/internal";
+  import dataJson from "./data.json";
+  import DisplayData from "./lib/DisplayData.svelte";
+  import Modal from "./lib/Modal.svelte";
+  import { writable } from "svelte/store";
+  import Popup from "./lib/Popup.svelte";
+  import Content from "./lib/Content.svelte";
+  const modal = writable(null);
+  const showModal = () => modal.set(Popup, { message: "It's a modal!" });
+
+  let searchedValue = "";
+
+  const fuse = new Fuse(dataJson.entries, {
+    keys: ["title", "description", "tags"],
+    threshold: 0.4,
+    minMatchCharLength: 3,
+  });
+  let searchedEntries = [];
+
+  const initData = () => {
+    searchedEntries = dataJson.entries.map((data) => ({
+      item: data,
+    }));
+
+    searchedValue = "";
+  };
+
+  initData();
+
+  const handleSearchChange = (event) => {
+    if (event.target.value.length === 0) return initData();
+    if (event.target.value.length >= 3)
+      searchedEntries = fuse.search(event.target.value);
+  };
 </script>
 
 <main>
-  <div>
-    <a href="https://vitejs.dev" target="_blank"> 
-      <img src="/vite.svg" class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank"> 
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
+  <div class="m-8">
+    <h2 class="text-2xl">Dev knowledge center</h2>
+    <span
+      >This project aim to be my knoledge center about web information I learn
+      during day to day development, code reviews, videos and readings, talking
+      with colleagues.</span
+    >
+    <span
+      >The info needs to be added and tagged so it makes it easier to search
+      through at a later point.</span
+    >
   </div>
-  <h1>Vite + Svelte</h1>
-
-  <div class="card">
-    <Counter />
+  <div class="">
+    Search:
+    <input
+      autofocus
+      type="text"
+      class="w-96"
+      on:input={handleSearchChange}
+      bind:value={searchedValue}
+    />
+    <button on:click={initData}>Clear</button>
+    <div class="text-left m-4">
+      <Modal show={$modal}>
+        <Content />
+      </Modal>
+    </div>
   </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
+  <DisplayData entries={searchedEntries} />
 </main>
-
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>
