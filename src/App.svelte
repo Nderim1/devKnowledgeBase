@@ -10,7 +10,6 @@
   import Popup from "./lib/Popup.svelte";
   import Content from "./lib/Content.svelte";
   const modal = writable(null);
-  const showModal = () => modal.set(Popup, { message: "It's a modal!" });
 
   let searchedValue = "";
 
